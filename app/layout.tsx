@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className="h-full antialiased">
+    <html lang="ja" className="h-full antialiased" style={{ colorScheme: "light" }}>
       <body className="min-h-full flex bg-gray-50">
         <Sidebar />
         <main className="flex-1 ml-64 p-8">{children}</main>
