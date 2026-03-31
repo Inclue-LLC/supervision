@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Supervisor {
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  affiliation String?
+  specialty   String?
+  bio         String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+  comments    Comment[]
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  clientName   String?
+  deadline     DateTime?
+  status       ProjectStatus @default(PENDING)
+  supervisorId String?
+  supervisor   Supervisor?   @relation(fields: [supervisorId], references: [id])
+  contents     Content[]
+  comments     Comment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Content {
+  id          String        @id @default(cuid())
+  title       String
+  body        String?
+  fileUrl     String?
+  version     Int           @default(1)
+  status      ContentStatus @default(DRAFT)
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Comment {
+  id           String      @id @default(cuid())
+  body         String
+  supervisorId String?
+  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
+  projectId    String?
+  project      Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contentId    String?
+  content      Content?    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+enum ProjectStatus {
+  PENDING
+  IN_REVIEW
+  REVISION_NEEDED
+  APPROVED
+  COMPLETED
+}
+
+enum ContentStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  REVISION_NEEDED
+  APPROVED
+}
