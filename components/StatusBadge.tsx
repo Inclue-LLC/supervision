@@ -1,25 +1,25 @@
 import {
-  ProjectStatus,
-  ContentStatus,
-  PROJECT_STATUS_LABELS,
-  CONTENT_STATUS_LABELS,
-  PROJECT_STATUS_COLORS,
-  CONTENT_STATUS_COLORS,
+  ReviewStatus,
+  ReviewType,
+  REVIEW_STATUS_LABELS,
+  REVIEW_STATUS_COLORS,
+  REVIEW_TYPE_LABELS,
+  REVIEW_TYPE_COLORS,
 } from "@/lib/types";
 
 type Props =
-  | { type: "project"; status: ProjectStatus }
-  | { type: "content"; status: ContentStatus };
+  | { kind: "status"; value: ReviewStatus }
+  | { kind: "type"; value: ReviewType };
 
 export default function StatusBadge(props: Props) {
   const label =
-    props.type === "project"
-      ? PROJECT_STATUS_LABELS[props.status]
-      : CONTENT_STATUS_LABELS[props.status];
+    props.kind === "status"
+      ? REVIEW_STATUS_LABELS[props.value]
+      : REVIEW_TYPE_LABELS[props.value];
   const color =
-    props.type === "project"
-      ? PROJECT_STATUS_COLORS[props.status]
-      : CONTENT_STATUS_COLORS[props.status];
+    props.kind === "status"
+      ? REVIEW_STATUS_COLORS[props.value]
+      : REVIEW_TYPE_COLORS[props.value];
 
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>

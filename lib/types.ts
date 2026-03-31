@@ -1,18 +1,17 @@
-export type ProjectStatus =
+export type ReviewType = "DESIGN" | "SAMPLE";
+export type ReviewStatus =
   | "PENDING"
   | "IN_REVIEW"
   | "REVISION_NEEDED"
   | "APPROVED"
   | "COMPLETED";
 
-export type ContentStatus =
-  | "DRAFT"
-  | "SUBMITTED"
-  | "IN_REVIEW"
-  | "REVISION_NEEDED"
-  | "APPROVED";
+export const REVIEW_TYPE_LABELS: Record<ReviewType, string> = {
+  DESIGN: "デザイン",
+  SAMPLE: "サンプル",
+};
 
-export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+export const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
   PENDING: "依頼中",
   IN_REVIEW: "監修中",
   REVISION_NEEDED: "差し戻し",
@@ -20,15 +19,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   COMPLETED: "完了",
 };
 
-export const CONTENT_STATUS_LABELS: Record<ContentStatus, string> = {
-  DRAFT: "下書き",
-  SUBMITTED: "提出済み",
-  IN_REVIEW: "監修中",
-  REVISION_NEEDED: "要修正",
-  APPROVED: "承認済み",
-};
-
-export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
+export const REVIEW_STATUS_COLORS: Record<ReviewStatus, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
   IN_REVIEW: "bg-blue-100 text-blue-800",
   REVISION_NEEDED: "bg-red-100 text-red-800",
@@ -36,10 +27,7 @@ export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
   COMPLETED: "bg-gray-100 text-gray-800",
 };
 
-export const CONTENT_STATUS_COLORS: Record<ContentStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-600",
-  SUBMITTED: "bg-yellow-100 text-yellow-800",
-  IN_REVIEW: "bg-blue-100 text-blue-800",
-  REVISION_NEEDED: "bg-red-100 text-red-800",
-  APPROVED: "bg-green-100 text-green-800",
+export const REVIEW_TYPE_COLORS: Record<ReviewType, string> = {
+  DESIGN: "bg-purple-100 text-purple-800",
+  SAMPLE: "bg-orange-100 text-orange-800",
 };
