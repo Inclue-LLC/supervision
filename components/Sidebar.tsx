@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/", label: "ダッシュボード", icon: "📊" },
-  { href: "/characters", label: "キャラクター", icon: "🎭" },
+  { href: "/", label: "監修進行中の案件", icon: "📋" },
+  { href: "/characters", label: "案件別", icon: "🗂️" },
   { href: "/supervisors", label: "監修者管理", icon: "👤" },
 ];
 

@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
+        <h1 className="text-2xl font-bold text-gray-900">監修進行中の案件</h1>
         <span className="text-sm text-gray-500">
           監修中: <span className="font-semibold text-gray-900">{activeProducts.length}件</span>
         </span>
