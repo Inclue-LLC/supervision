@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="ja" className="h-full antialiased" style={{ colorScheme: "light" }}>
       <body className="min-h-full flex bg-gray-50">
         <Sidebar />
-        <main className="flex-1 ml-64 p-8">{children}</main>
+        <main className="flex-1 ml-64 min-h-screen">{children}</main>
       </body>
     </html>
   );

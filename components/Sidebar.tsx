@@ -13,7 +13,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 min-h-screen bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-64 fixed left-0 top-0 h-screen overflow-y-auto bg-white border-r border-gray-200 flex flex-col">
       <div className="px-5 py-5 border-b border-gray-100">
         <h1 className="text-base font-bold text-gray-900">監修管理システム</h1>
       </div>
