@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import StageSection from "./StageSection";
-import { STAGE_TYPES, STAGE_TYPE_LABELS, StageType } from "@/lib/types";
+import { STAGE_TYPE_LABELS, StageType } from "@/lib/types";
+
+const DESIGN_QUICK: StageType[] = ["DESIGN_1", "DESIGN_2", "DESIGN_3"];
+const DESIGN_EXTRA: StageType[] = ["DESIGN_4", "DESIGN_5"];
+const SAMPLE_QUICK: StageType[] = ["SAMPLE_1", "SAMPLE_2", "SAMPLE_3"];
+const SAMPLE_EXTRA: StageType[] = ["SAMPLE_4", "SAMPLE_5"];
+const ALL_ORDERED: StageType[] = [
+  ...DESIGN_QUICK, ...DESIGN_EXTRA,
+  ...SAMPLE_QUICK, ...SAMPLE_EXTRA,
+];
 
 type Stage = {
   stageType: StageType;
@@ -20,66 +29,98 @@ type Props = {
 };
 
 export default function ProductStages({ productId, stages, requiresAuthorReview }: Props) {
-  const existingTypes = stages.map((s) => s.stageType);
-  const [visibleTypes, setVisibleTypes] = useState<StageType[]>(
-    STAGE_TYPES.filter((t) => existingTypes.includes(t))
+  const existingTypes = new Set(stages.map((s) => s.stageType));
+
+  const [visibleTypes, setVisibleTypes] = useState<Set<StageType>>(
+    new Set(existingTypes)
   );
-  const [adding, setAdding] = useState(false);
+
+  function addType(type: StageType) {
+    setVisibleTypes((prev) => new Set([...prev, type]));
+  }
 
   const stageMap = Object.fromEntries(stages.map((s) => [s.stageType, s]));
-  const availableToAdd = STAGE_TYPES.filter((t) => !visibleTypes.includes(t));
+  const orderedVisible = ALL_ORDERED.filter((t) => visibleTypes.has(t));
+  const nextDesignExtra = DESIGN_EXTRA.find((t) => !visibleTypes.has(t));
+  const nextSampleExtra = SAMPLE_EXTRA.find((t) => !visibleTypes.has(t));
 
-  function addStageType(type: StageType) {
-    setVisibleTypes((prev) => {
-      const next = [...prev, type];
-      return STAGE_TYPES.filter((t) => next.includes(t));
-    });
-    setAdding(false);
+  function StageButton({ type }: { type: StageType }) {
+    const active = visibleTypes.has(type);
+    return (
+      <button
+        onClick={() => !active && addType(type)}
+        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+          active
+            ? "bg-blue-600 text-white border-blue-600"
+            : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+        }`}
+      >
+        {STAGE_TYPE_LABELS[type]}
+      </button>
+    );
   }
 
   return (
-    <div className="space-y-3">
-      {visibleTypes.map((stageType) => (
-        <StageSection
-          key={stageType}
-          productId={productId}
-          stageType={stageType}
-          stage={stageMap[stageType] ?? null}
-          requiresAuthorReview={requiresAuthorReview}
-        />
-      ))}
-
-      {availableToAdd.length > 0 && (
-        <div>
-          {adding ? (
-            <div className="border border-gray-200 rounded-xl px-4 py-3 bg-white">
-              <p className="text-xs text-gray-500 mb-2">追加するステージを選択</p>
-              <div className="flex gap-2 flex-wrap">
-                {availableToAdd.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => addStageType(type)}
-                    className="border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    {STAGE_TYPE_LABELS[type]}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setAdding(false)}
-                  className="text-sm text-gray-400 hover:text-gray-600 px-2"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </div>
-          ) : (
+    <div className="space-y-4">
+      {/* Stage selector */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        {/* Design row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-gray-400 w-16 shrink-0">デザイン</span>
+          {DESIGN_QUICK.map((type) => (
+            <StageButton key={type} type={type} />
+          ))}
+          {DESIGN_EXTRA.filter((t) => visibleTypes.has(t)).map((type) => (
+            <StageButton key={type} type={type} />
+          ))}
+          {nextDesignExtra && (
             <button
-              onClick={() => setAdding(true)}
-              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-3 text-sm text-gray-400 hover:border-gray-300 hover:text-gray-600 transition-colors"
+              onClick={() => addType(nextDesignExtra)}
+              className="px-3 py-1.5 rounded-lg text-sm border border-dashed border-gray-300 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
             >
-              + ステージを追加
+              + {STAGE_TYPE_LABELS[nextDesignExtra]}
             </button>
           )}
+        </div>
+
+        <div className="border-t border-gray-100" />
+
+        {/* Sample row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-gray-400 w-16 shrink-0">サンプル</span>
+          {SAMPLE_QUICK.map((type) => (
+            <StageButton key={type} type={type} />
+          ))}
+          {SAMPLE_EXTRA.filter((t) => visibleTypes.has(t)).map((type) => (
+            <StageButton key={type} type={type} />
+          ))}
+          {nextSampleExtra && (
+            <button
+              onClick={() => addType(nextSampleExtra)}
+              className="px-3 py-1.5 rounded-lg text-sm border border-dashed border-gray-300 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+            >
+              + {STAGE_TYPE_LABELS[nextSampleExtra]}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Stage sections */}
+      {orderedVisible.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-8">
+          上のボタンでステージを選択してください
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {orderedVisible.map((stageType) => (
+            <StageSection
+              key={stageType}
+              productId={productId}
+              stageType={stageType}
+              stage={stageMap[stageType] ?? null}
+              requiresAuthorReview={requiresAuthorReview}
+            />
+          ))}
         </div>
       )}
     </div>

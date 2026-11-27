@@ -69,7 +69,7 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
         </thead>
         <tbody className="divide-y divide-gray-100">
           {products.map((p) => (
-            <tr key={p.id} className="hover:bg-gray-50">
+            <tr key={p.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/products/${p.id}`}>
               <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.name}</td>
               <td className="px-6 py-4 text-sm text-gray-600">
                 {p.character.name}
@@ -89,6 +89,7 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
                 <Link
                   href={`/products/${p.id}`}
                   className="text-sm text-blue-600 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   詳細 →
                 </Link>
