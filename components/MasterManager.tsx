@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type Character = { id: string; name: string; requiresAuthorReview: boolean };
@@ -11,7 +11,15 @@ type Props = {
   licensees: Licensee[];
 };
 
-function CharacterRow({ char, onDelete }: { char: Character; onDelete: (id: string) => void }) {
+function CharacterRow({
+  char,
+  onSave,
+  onDelete,
+}: {
+  char: Character;
+  onSave: (id: string, name: string, requires: boolean) => Promise<void>;
+  onDelete: (id: string, name: string) => Promise<void>;
+}) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(char.name);
   const [requires, setRequires] = useState(char.requiresAuthorReview);
@@ -19,19 +27,9 @@ function CharacterRow({ char, onDelete }: { char: Character; onDelete: (id: stri
 
   async function save() {
     setSaving(true);
-    await fetch(`/api/characters/${char.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, requiresAuthorReview: requires }),
-    });
+    await onSave(char.id, name, requires);
     setSaving(false);
     setEditing(false);
-  }
-
-  async function del() {
-    if (!confirm(`「${char.name}」を削除しますか？関連する商品も全て削除されます。`)) return;
-    await fetch(`/api/characters/${char.id}`, { method: "DELETE" });
-    onDelete(char.id);
   }
 
   if (editing) {
@@ -61,31 +59,29 @@ function CharacterRow({ char, onDelete }: { char: Character; onDelete: (id: stri
         <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">作家監修あり</span>
       )}
       <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-gray-600">編集</button>
-      <button onClick={del} className="text-xs text-red-400 hover:text-red-600">削除</button>
+      <button onClick={() => onDelete(char.id, char.name)} className="text-xs text-red-400 hover:text-red-600">削除</button>
     </div>
   );
 }
 
-function LicenseeRow({ licensee, onDelete }: { licensee: Licensee; onDelete: (id: string) => void }) {
+function LicenseeRow({
+  licensee,
+  onSave,
+  onDelete,
+}: {
+  licensee: Licensee;
+  onSave: (id: string, name: string) => Promise<void>;
+  onDelete: (id: string, name: string) => Promise<void>;
+}) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(licensee.name);
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
-    await fetch(`/api/licensees/${licensee.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
+    await onSave(licensee.id, name);
     setSaving(false);
     setEditing(false);
-  }
-
-  async function del() {
-    if (!confirm(`「${licensee.name}」を削除しますか？`)) return;
-    await fetch(`/api/licensees/${licensee.id}`, { method: "DELETE" });
-    onDelete(licensee.id);
   }
 
   if (editing) {
@@ -108,7 +104,7 @@ function LicenseeRow({ licensee, onDelete }: { licensee: Licensee; onDelete: (id
     <div className="flex items-center gap-3 py-2.5">
       <span className="flex-1 text-sm text-gray-900">{licensee.name}</span>
       <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-gray-600">編集</button>
-      <button onClick={del} className="text-xs text-red-400 hover:text-red-600">削除</button>
+      <button onClick={() => onDelete(licensee.id, licensee.name)} className="text-xs text-red-400 hover:text-red-600">削除</button>
     </div>
   );
 }
@@ -123,6 +119,10 @@ export default function MasterManager({ characters: initChars, licensees: initLi
   const [newLicenseeName, setNewLicenseeName] = useState("");
   const [addingLicensee, setAddingLicensee] = useState(false);
 
+  // サーバーのデータが更新されたら同期する
+  useEffect(() => { setChars(initChars); }, [initChars]);
+  useEffect(() => { setLicensees(initLicensees); }, [initLicensees]);
+
   async function addChar() {
     if (!newCharName.trim()) return;
     const res = await fetch("/api/characters", {
@@ -131,11 +131,30 @@ export default function MasterManager({ characters: initChars, licensees: initLi
       body: JSON.stringify({ name: newCharName.trim(), requiresAuthorReview: newCharRequires }),
     });
     if (res.ok) {
-      const c = await res.json();
-      setChars((prev) => [...prev, c]);
       setNewCharName("");
       setNewCharRequires(false);
       setAddingChar(false);
+      router.refresh();
+    }
+  }
+
+  async function saveChar(id: string, name: string, requires: boolean) {
+    await fetch(`/api/characters/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, requiresAuthorReview: requires }),
+    });
+    router.refresh();
+  }
+
+  async function deleteChar(id: string, name: string) {
+    if (!confirm(`「${name}」を削除しますか？関連する商品も全て削除されます。`)) return;
+    const res = await fetch(`/api/characters/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setChars((prev) => prev.filter((c) => c.id !== id));
+      router.refresh();
+    } else {
+      alert("削除に失敗しました");
     }
   }
 
@@ -147,10 +166,29 @@ export default function MasterManager({ characters: initChars, licensees: initLi
       body: JSON.stringify({ name: newLicenseeName.trim() }),
     });
     if (res.ok) {
-      const l = await res.json();
-      setLicensees((prev) => [...prev, l]);
       setNewLicenseeName("");
       setAddingLicensee(false);
+      router.refresh();
+    }
+  }
+
+  async function saveLicensee(id: string, name: string) {
+    await fetch(`/api/licensees/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    router.refresh();
+  }
+
+  async function deleteLicensee(id: string, name: string) {
+    if (!confirm(`「${name}」を削除しますか？`)) return;
+    const res = await fetch(`/api/licensees/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setLicensees((prev) => prev.filter((l) => l.id !== id));
+      router.refresh();
+    } else {
+      alert("削除に失敗しました");
     }
   }
 
@@ -160,21 +198,14 @@ export default function MasterManager({ characters: initChars, licensees: initLi
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-900">キャラクター</h2>
-          <button
-            onClick={() => setAddingChar(true)}
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <button onClick={() => setAddingChar(true)} className="text-sm text-blue-600 hover:underline">
             + 追加
           </button>
         </div>
 
         <div className="divide-y divide-gray-100">
           {chars.map((c) => (
-            <CharacterRow
-              key={c.id}
-              char={c}
-              onDelete={(id) => setChars((prev) => prev.filter((x) => x.id !== id))}
-            />
+            <CharacterRow key={c.id} char={c} onSave={saveChar} onDelete={deleteChar} />
           ))}
         </div>
 
@@ -197,18 +228,8 @@ export default function MasterManager({ characters: initChars, licensees: initLi
               作家監修あり（作家IPの場合）
             </label>
             <div className="flex gap-2">
-              <button
-                onClick={addChar}
-                className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700"
-              >
-                追加
-              </button>
-              <button
-                onClick={() => { setAddingChar(false); setNewCharName(""); }}
-                className="text-sm text-gray-400 hover:text-gray-600"
-              >
-                キャンセル
-              </button>
+              <button onClick={addChar} className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700">追加</button>
+              <button onClick={() => { setAddingChar(false); setNewCharName(""); }} className="text-sm text-gray-400 hover:text-gray-600">キャンセル</button>
             </div>
           </div>
         )}
@@ -218,21 +239,14 @@ export default function MasterManager({ characters: initChars, licensees: initLi
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-900">ライセンシー</h2>
-          <button
-            onClick={() => setAddingLicensee(true)}
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <button onClick={() => setAddingLicensee(true)} className="text-sm text-blue-600 hover:underline">
             + 追加
           </button>
         </div>
 
         <div className="divide-y divide-gray-100">
           {licensees.map((l) => (
-            <LicenseeRow
-              key={l.id}
-              licensee={l}
-              onDelete={(id) => setLicensees((prev) => prev.filter((x) => x.id !== id))}
-            />
+            <LicenseeRow key={l.id} licensee={l} onSave={saveLicensee} onDelete={deleteLicensee} />
           ))}
         </div>
 
@@ -247,18 +261,8 @@ export default function MasterManager({ characters: initChars, licensees: initLi
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div className="flex gap-2">
-              <button
-                onClick={addLicensee}
-                className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700"
-              >
-                追加
-              </button>
-              <button
-                onClick={() => { setAddingLicensee(false); setNewLicenseeName(""); }}
-                className="text-sm text-gray-400 hover:text-gray-600"
-              >
-                キャンセル
-              </button>
+              <button onClick={addLicensee} className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700">追加</button>
+              <button onClick={() => { setAddingLicensee(false); setNewLicenseeName(""); }} className="text-sm text-gray-400 hover:text-gray-600">キャンセル</button>
             </div>
           </div>
         )}
