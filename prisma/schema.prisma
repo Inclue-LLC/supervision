@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,87 +6,67 @@ datasource db {
   provider = "sqlite"
 }
 
-model Supervisor {
-  id        String    @id @default(cuid())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  comments  Comment[]
-}
-
 model Character {
   id                   String    @id @default(cuid())
   name                 String
   requiresAuthorReview Boolean   @default(false)
-  inhouseProducts      Product[] @relation("InhouseProducts")
-  regions              Region[]
+  products             Product[]
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
-}
-
-model Region {
-  id          String     @id @default(cuid())
-  name        String
-  characterId String
-  character   Character  @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  licensees   Licensee[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
 }
 
 model Licensee {
   id        String    @id @default(cuid())
   name      String
-  regionId  String
-  region    Region    @relation(fields: [regionId], references: [id], onDelete: Cascade)
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id           String             @id @default(cuid())
-  name         String
-  type         ReviewType
-  status       ReviewStatus       @default(PENDING)
-  satoNote     String?
-  authorStatus AuthorReviewStatus @default(NOT_REQUIRED)
-  authorNote   String?
-  imageUrl     String?
-  characterId  String?
-  character    Character?         @relation("InhouseProducts", fields: [characterId], references: [id], onDelete: Cascade)
-  licenseeId   String?
-  licensee     Licensee?          @relation(fields: [licenseeId], references: [id], onDelete: Cascade)
-  comments     Comment[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id          String        @id @default(cuid())
+  name        String
+  characterId String
+  character   Character     @relation(fields: [characterId], references: [id])
+  licenseeId  String?
+  licensee    Licensee?     @relation(fields: [licenseeId], references: [id])
+  isCompleted Boolean       @default(false)
+  stages      ReviewStage[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
-model Comment {
-  id           String      @id @default(cuid())
-  body         String
-  supervisorId String?
-  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
+model ReviewStage {
+  id           String       @id @default(cuid())
   productId    String
-  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stageType    StageType
+  satoStatus   SatoStatus   @default(PENDING)
+  satoNote     String?
+  authorStatus AuthorStatus @default(NOT_REQUIRED)
+  authorNote   String?
+  fileUrl      String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([productId, stageType])
 }
 
-enum ReviewType {
-  DESIGN
-  SAMPLE
+enum StageType {
+  DESIGN_1
+  DESIGN_2
+  SAMPLE_1
+  SAMPLE_2
 }
 
-enum ReviewStatus {
+enum SatoStatus {
   PENDING
   IN_REVIEW
   REVISION_NEEDED
   APPROVED
-  COMPLETED
 }
 
-enum AuthorReviewStatus {
+enum AuthorStatus {
   NOT_REQUIRED
   PENDING
   IN_REVIEW

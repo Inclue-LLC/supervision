@@ -13,8 +13,8 @@ export default function ImageUpload({ value, onChange }: Props) {
   const [error, setError] = useState("");
 
   async function uploadFile(file: File) {
-    if (file.type !== "application/pdf") {
-      setError("PDFファイルのみアップロードできます");
+    if (!file.type.startsWith("image/")) {
+      setError("画像ファイル（JPG・PNG・GIF・WebP等）のみアップロードできます");
       return;
     }
     setUploading(true);
@@ -47,12 +47,11 @@ export default function ImageUpload({ value, onChange }: Props) {
   return (
     <div>
       {value ? (
-        <div className="relative">
-          <embed
+        <div className="relative inline-block">
+          <img
             src={value}
-            type="application/pdf"
-            className="w-full rounded-xl border border-gray-200"
-            style={{ height: "360px" }}
+            alt="アップロード画像"
+            className="max-w-full max-h-80 rounded-xl border border-gray-200 object-contain"
           />
           <button
             type="button"
@@ -74,7 +73,7 @@ export default function ImageUpload({ value, onChange }: Props) {
           <label className="flex flex-col items-center justify-center h-32 cursor-pointer">
             <input
               type="file"
-              accept="application/pdf,.pdf"
+              accept="image/*"
               className="hidden"
               onChange={handleChange}
             />
@@ -82,10 +81,11 @@ export default function ImageUpload({ value, onChange }: Props) {
               <span className="text-sm text-gray-500">アップロード中...</span>
             ) : (
               <>
-                <span className="text-3xl mb-2">📄</span>
+                <span className="text-3xl mb-2">🖼️</span>
                 <span className="text-sm text-gray-500">
-                  PDFをドラッグ&ドロップ、またはクリックして選択
+                  画像をドラッグ&ドロップ、またはクリックして選択
                 </span>
+                <span className="text-xs text-gray-400 mt-1">JPG・PNG・GIF・WebP対応</span>
               </>
             )}
           </label>

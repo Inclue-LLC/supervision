@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/", label: "監修進行中の案件", icon: "📋" },
-  { href: "/characters", label: "案件別", icon: "🗂️" },
+  { href: "/", label: "商品一覧", icon: "📋" },
+  { href: "/masters", label: "マスタ管理", icon: "⚙️" },
 ];
 
 export default function Sidebar() {
@@ -20,7 +20,7 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const active =
             item.href === "/"
-              ? pathname === "/"
+              ? pathname === "/" || pathname.startsWith("/products")
               : pathname.startsWith(item.href);
           return (
             <Link
