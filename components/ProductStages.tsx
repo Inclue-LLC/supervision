@@ -50,6 +50,10 @@ export default function ProductStages({ productId, stages, requiresAuthorReview 
     setLastAdded(null);
   }
 
+  function handleStageDelete(type: StageType) {
+    removeType(type);
+  }
+
   const stageMap = Object.fromEntries(stages.map((s) => [s.stageType, s]));
   const orderedVisible = ALL_ORDERED.filter((t) => visibleTypes.has(t));
   const nextDesignExtra = DESIGN_EXTRA.find((t) => !visibleTypes.has(t));
@@ -146,6 +150,7 @@ export default function ProductStages({ productId, stages, requiresAuthorReview 
               stage={stageMap[stageType] ?? null}
               requiresAuthorReview={requiresAuthorReview}
               defaultOpen={stageType === lastAdded}
+              onDelete={() => handleStageDelete(stageType)}
             />
           ))}
         </div>

@@ -32,3 +32,14 @@ export async function PATCH(
 
   return NextResponse.json(stage);
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string; stageType: string }> }
+) {
+  const { id: productId, stageType } = await params;
+  await prisma.reviewStage.deleteMany({
+    where: { productId, stageType: stageType as any },
+  });
+  return NextResponse.json({ ok: true });
+}

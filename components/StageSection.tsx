@@ -22,6 +22,7 @@ type Props = {
   stage: Stage | null;
   requiresAuthorReview: boolean;
   defaultOpen?: boolean;
+  onDelete?: () => void;
 };
 
 function parseFileUrls(fileUrl: string | null): string[] {
@@ -42,12 +43,12 @@ function serializeFileUrls(urls: string[]): string | null {
 type SampleStatus = "IN_REVIEW" | "APPROVED" | null;
 
 const SATO_BADGE: Record<string, { label: string; cls: string }> = {
-  REVISION_NEEDED: { label: "差し戻し", cls: "bg-orange-100 text-orange-700" },
-  APPROVED:        { label: "校了",     cls: "bg-green-100 text-green-700" },
-  IN_REVIEW:       { label: "確認中",   cls: "bg-blue-100 text-blue-700" },
+  IN_REVIEW:       { label: "作家監修依頼済", cls: "bg-sky-100 text-sky-700" },
+  REVISION_NEEDED: { label: "差し戻し",      cls: "bg-amber-100 text-amber-700" },
+  APPROVED:        { label: "校了",          cls: "bg-emerald-100 text-emerald-700" },
 };
 
-export default function StageSection({ productId, stageType, stage, defaultOpen }: Props) {
+export default function StageSection({ productId, stageType, stage, onDelete }: Props) {
   const [open] = useState(true);
   const [satoStatus, setSatoStatus] = useState<SatoStatus>(
     (stage?.satoStatus as SatoStatus) ?? "PENDING"
@@ -63,6 +64,7 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function save(newSatoStatus: SatoStatus) {
     setSaving(true);
@@ -87,6 +89,13 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
     setTimeout(() => setSaved(false), 2000);
   }
 
+  async function handleDelete() {
+    if (!confirm(`「${STAGE_TYPE_LABELS[stageType]}」を削除しますか？`)) return;
+    setDeleting(true);
+    await fetch(`/api/products/${productId}/stages/${stageType}`, { method: "DELETE" });
+    onDelete?.();
+  }
+
   const hasData = stage !== null;
   const satoBadge = SATO_BADGE[satoStatus];
   const sampleStatusLabel =
@@ -104,7 +113,7 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
         {sampleStatusLabel && (
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              sampleStatus === "APPROVED" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+              sampleStatus === "APPROVED" ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700"
             }`}
           >
             {sampleStatusLabel}
@@ -125,8 +134,8 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
                   onClick={() => setSampleStatus("IN_REVIEW")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     sampleStatus === "IN_REVIEW"
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                      ? "bg-sky-700 text-white border-sky-700"
+                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   作家監修中
@@ -136,8 +145,8 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
                   onClick={() => setSampleStatus("APPROVED")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     sampleStatus === "APPROVED"
-                      ? "bg-green-600 text-white border-green-600"
-                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                      ? "bg-emerald-700 text-white border-emerald-700"
+                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   作家監修完了
@@ -168,7 +177,7 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
                 onChange={(e) => setSatoNote(e.target.value)}
                 rows={3}
                 placeholder="佐藤が指摘した修正内容をメモ..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
               />
             </div>
           </div>
@@ -183,26 +192,34 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
                 onChange={(e) => setAuthorNote(e.target.value)}
                 rows={3}
                 placeholder="作家から来た修正依頼の内容をメモ..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
               />
             </div>
           </div>
 
-          {/* Save buttons */}
+          {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-sm font-medium px-4 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50 transition-colors"
+            >
+              削除
+            </button>
             <button
               type="button"
               onClick={() => save("IN_REVIEW")}
               disabled={saving}
-              className="bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50"
+              className="text-sm font-medium px-4 py-2 rounded-lg border border-sky-200 text-sky-700 bg-sky-50 hover:bg-sky-100 disabled:opacity-50 transition-colors"
             >
-              保存
+              作家に監修依頼済みで保存
             </button>
             <button
               type="button"
               onClick={() => save("REVISION_NEEDED")}
               disabled={saving}
-              className="bg-orange-500 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50"
+              className="text-sm font-medium px-4 py-2 rounded-lg border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 transition-colors"
             >
               差し戻しで保存
             </button>
@@ -210,11 +227,11 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
               type="button"
               onClick={() => save("APPROVED")}
               disabled={saving}
-              className="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="text-sm font-medium px-4 py-2 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
             >
               校了で保存
             </button>
-            {saved && <span className="text-sm text-green-600">保存しました</span>}
+            {saved && <span className="text-sm text-emerald-600">保存しました</span>}
           </div>
         </div>
       )}
