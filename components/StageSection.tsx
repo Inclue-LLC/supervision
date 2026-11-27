@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import ImageUpload from "./ImageUpload";
 import { StageType, STAGE_TYPE_LABELS } from "@/lib/types";
 
@@ -47,6 +48,7 @@ const SATO_BADGE: Record<string, { label: string; cls: string }> = {
 };
 
 export default function StageSection({ productId, stageType, stage, onDelete }: Props) {
+  const router = useRouter();
   const [open] = useState(true);
   const [satoStatus, setSatoStatus] = useState<SatoStatus>(
     (stage?.satoStatus as SatoStatus) ?? "PENDING"
@@ -76,7 +78,11 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
     });
     setSaving(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (isSample && newSatoStatus === "APPROVED") {
+      router.push("/");
+    } else {
+      setTimeout(() => setSaved(false), 2000);
+    }
   }
 
   async function handleDelete() {
