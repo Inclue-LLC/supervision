@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { upload } from "@vercel/blob/client";
 
 type Props = {
   values: string[];
@@ -20,18 +21,15 @@ export default function ImageUpload({ values, onChange }: Props) {
     setUploading(true);
     setError("");
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (res.ok) {
-        const { url } = await res.json();
-        onChange([...values, url]);
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "アップロードに失敗しました");
-      }
-    } catch {
-      setError("通信エラーが発生しました。再度お試しください");
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const blob = await upload(filename, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      });
+      onChange([...values, blob.url]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "アップロードに失敗しました");
     } finally {
       setUploading(false);
     }
