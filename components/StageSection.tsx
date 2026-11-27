@@ -40,8 +40,6 @@ function serializeFileUrls(urls: string[]): string | null {
   return JSON.stringify(urls);
 }
 
-type SampleStatus = "IN_REVIEW" | "APPROVED" | null;
-
 const SATO_BADGE: Record<string, { label: string; cls: string }> = {
   IN_REVIEW:       { label: "作家監修依頼済", cls: "bg-sky-100 text-sky-700" },
   REVISION_NEEDED: { label: "差し戻し",      cls: "bg-amber-100 text-amber-700" },
@@ -57,11 +55,6 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
   const [authorNote, setAuthorNote] = useState(stage?.authorNote ?? "");
   const [fileUrls, setFileUrls] = useState<string[]>(parseFileUrls(stage?.fileUrl ?? null));
   const isSample = stageType.startsWith("SAMPLE_");
-  const [sampleStatus, setSampleStatus] = useState<SampleStatus>(
-    isSample
-      ? (stage?.authorStatus === "APPROVED" ? "APPROVED" : stage?.authorStatus === "IN_REVIEW" ? "IN_REVIEW" : null)
-      : null
-  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -76,9 +69,6 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
       authorNote: authorNote || null,
       fileUrl: serializeFileUrls(fileUrls),
     };
-    if (isSample) {
-      payload.authorStatus = sampleStatus ?? "NOT_REQUIRED";
-    }
     await fetch(`/api/products/${productId}/stages/${stageType}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -98,8 +88,6 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
 
   const hasData = stage !== null;
   const satoBadge = SATO_BADGE[satoStatus];
-  const sampleStatusLabel =
-    sampleStatus === "IN_REVIEW" ? "作家監修中" : sampleStatus === "APPROVED" ? "作家監修完了" : null;
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -110,60 +98,11 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
             {satoBadge.label}
           </span>
         )}
-        {sampleStatusLabel && (
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              sampleStatus === "APPROVED" ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700"
-            }`}
-          >
-            {sampleStatusLabel}
-          </span>
-        )}
         {!hasData && <span className="text-xs text-gray-400">未開始</span>}
       </div>
 
       {open && (
         <div className="border-t border-gray-100 px-5 py-5 space-y-5 bg-white">
-          {/* Sample overall status */}
-          {isSample && (
-            <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">全体ステータス</p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSampleStatus("IN_REVIEW")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    sampleStatus === "IN_REVIEW"
-                      ? "bg-sky-700 text-white border-sky-700"
-                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  作家監修中
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSampleStatus("APPROVED")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    sampleStatus === "APPROVED"
-                      ? "bg-emerald-700 text-white border-emerald-700"
-                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  作家監修完了
-                </button>
-                {sampleStatus && (
-                  <button
-                    type="button"
-                    onClick={() => setSampleStatus(null)}
-                    className="text-xs text-gray-400 hover:text-gray-600 ml-1"
-                  >
-                    クリア
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Images */}
           <ImageUpload values={fileUrls} onChange={setFileUrls} />
 
