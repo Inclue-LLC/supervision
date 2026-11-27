@@ -3,11 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import StatusBadge from "./StatusBadge";
 import ProductForm from "./ProductForm";
-import { StageType, SatoStatus, AuthorStatus, STAGE_TYPE_LABELS, STAGE_TYPES } from "@/lib/types";
+import { StageType, AuthorStatus, STAGE_TYPE_LABELS, STAGE_TYPES } from "@/lib/types";
 
-type Stage = { stageType: StageType; satoStatus: SatoStatus; authorStatus: AuthorStatus };
+type Stage = { stageType: StageType; authorStatus: AuthorStatus };
 type Character = { id: string; name: string; requiresAuthorReview: boolean };
 type Licensee = { id: string; name: string };
 type Product = {
@@ -28,19 +27,18 @@ type Props = {
   licensees: Licensee[];
 };
 
-function StageProgress({ stages, requiresAuthorReview }: { stages: Stage[]; requiresAuthorReview: boolean }) {
+function StageProgress({ stages }: { stages: Stage[] }) {
   return (
     <div className="flex gap-1">
       {STAGE_TYPES.map((st) => {
         const stage = stages.find((s) => s.stageType === st);
-        const done = stage?.satoStatus === "APPROVED" && (!requiresAuthorReview || stage?.authorStatus === "APPROVED");
-        const active = stage && stage.satoStatus !== "PENDING";
+        const done = st === "SAMPLE_1" && stage?.authorStatus === "APPROVED";
         return (
           <div
             key={st}
             title={STAGE_TYPE_LABELS[st]}
             className={`w-2 h-2 rounded-full ${
-              done ? "bg-green-500" : active ? "bg-blue-400" : "bg-gray-200"
+              done ? "bg-green-500" : stage ? "bg-blue-400" : "bg-gray-200"
             }`}
           />
         );
@@ -82,7 +80,7 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
               <td className="px-6 py-4 text-sm text-gray-500">{p.theme ?? <span className="text-gray-300">—</span>}</td>
               <td className="px-6 py-4 text-sm text-gray-500">{p.licensee?.name ?? "自社製造"}</td>
               <td className="px-6 py-4">
-                <StageProgress stages={p.stages} requiresAuthorReview={p.character.requiresAuthorReview} />
+                <StageProgress stages={p.stages} />
               </td>
               <td className="px-6 py-4 text-xs text-gray-400">
                 {new Date(p.updatedAt).toLocaleDateString("ja-JP")}

@@ -3,10 +3,10 @@ export type SatoStatus = "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED
 export type AuthorStatus = "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
 
 export const STAGE_TYPE_LABELS: Record<StageType, string> = {
-  DESIGN_1: "第一デザイン",
-  DESIGN_2: "第二デザイン",
-  SAMPLE_1: "第一サンプル",
-  SAMPLE_2: "第二サンプル",
+  DESIGN_1: "デザイン1",
+  DESIGN_2: "デザイン2",
+  SAMPLE_1: "サンプル1",
+  SAMPLE_2: "サンプル2",
 };
 
 export const STAGE_TYPES: StageType[] = ["DESIGN_1", "DESIGN_2", "SAMPLE_1", "SAMPLE_2"];

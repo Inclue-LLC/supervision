@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import StageSection from "@/components/StageSection";
-import { STAGE_TYPES, StageType } from "@/lib/types";
+import ProductStages from "@/components/ProductStages";
 import ProductDetailActions from "@/components/ProductDetailActions";
 
 export default async function ProductDetailPage({
@@ -22,8 +21,6 @@ export default async function ProductDetailPage({
   });
 
   if (!product) notFound();
-
-  const stageMap = Object.fromEntries(product.stages.map((s) => [s.stageType, s]));
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -59,17 +56,18 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      <div className="space-y-3">
-        {STAGE_TYPES.map((stageType) => (
-          <StageSection
-            key={stageType}
-            productId={id}
-            stageType={stageType}
-            stage={stageMap[stageType] ?? null}
-            requiresAuthorReview={product.character.requiresAuthorReview}
-          />
-        ))}
-      </div>
+      <ProductStages
+        productId={id}
+        stages={product.stages.map((s) => ({
+          stageType: s.stageType as import("@/lib/types").StageType,
+          satoStatus: s.satoStatus,
+          satoNote: s.satoNote,
+          authorStatus: s.authorStatus as "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED",
+          authorNote: s.authorNote,
+          fileUrl: s.fileUrl,
+        }))}
+        requiresAuthorReview={product.character.requiresAuthorReview}
+      />
     </div>
   );
 }

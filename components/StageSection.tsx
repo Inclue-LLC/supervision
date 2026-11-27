@@ -2,19 +2,13 @@
 
 import { useState } from "react";
 import ImageUpload from "./ImageUpload";
-import StatusBadge from "./StatusBadge";
-import {
-  StageType,
-  SatoStatus,
-  AuthorStatus,
-  STAGE_TYPE_LABELS,
-  SATO_STATUS_LABELS,
-  AUTHOR_STATUS_LABELS,
-} from "@/lib/types";
+import { StageType, STAGE_TYPE_LABELS } from "@/lib/types";
+
+type AuthorStatus = "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
 
 type Stage = {
   stageType: StageType;
-  satoStatus: SatoStatus;
+  satoStatus: string;
   satoNote: string | null;
   authorStatus: AuthorStatus;
   authorNote: string | null;
@@ -28,28 +22,51 @@ type Props = {
   requiresAuthorReview: boolean;
 };
 
-const SATO_STATUS_OPTIONS: SatoStatus[] = ["PENDING", "IN_REVIEW", "REVISION_NEEDED", "APPROVED"];
-const AUTHOR_STATUS_OPTIONS: AuthorStatus[] = ["NOT_REQUIRED", "PENDING", "IN_REVIEW", "REVISION_NEEDED", "APPROVED"];
+function parseFileUrls(fileUrl: string | null): string[] {
+  if (!fileUrl) return [];
+  try {
+    const parsed = JSON.parse(fileUrl);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return [fileUrl];
+}
 
-export default function StageSection({ productId, stageType, stage, requiresAuthorReview }: Props) {
+function serializeFileUrls(urls: string[]): string | null {
+  if (urls.length === 0) return null;
+  if (urls.length === 1) return urls[0];
+  return JSON.stringify(urls);
+}
+
+type SampleStatus = "IN_REVIEW" | "APPROVED" | null;
+
+export default function StageSection({ productId, stageType, stage }: Props) {
   const [open, setOpen] = useState(false);
-  const [satoStatus, setSatoStatus] = useState<SatoStatus>(stage?.satoStatus ?? "PENDING");
   const [satoNote, setSatoNote] = useState(stage?.satoNote ?? "");
-  const [authorStatus, setAuthorStatus] = useState<AuthorStatus>(
-    stage?.authorStatus ?? (requiresAuthorReview ? "PENDING" : "NOT_REQUIRED")
-  );
   const [authorNote, setAuthorNote] = useState(stage?.authorNote ?? "");
-  const [fileUrl, setFileUrl] = useState(stage?.fileUrl ?? "");
+  const [fileUrls, setFileUrls] = useState<string[]>(parseFileUrls(stage?.fileUrl ?? null));
+  const [sampleStatus, setSampleStatus] = useState<SampleStatus>(
+    stageType === "SAMPLE_1"
+      ? (stage?.authorStatus === "APPROVED" ? "APPROVED" : stage?.authorStatus === "IN_REVIEW" ? "IN_REVIEW" : null)
+      : null
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   async function handleSave() {
     setSaving(true);
     setSaved(false);
+    const payload: Record<string, unknown> = {
+      satoNote: satoNote || null,
+      authorNote: authorNote || null,
+      fileUrl: serializeFileUrls(fileUrls),
+    };
+    if (stageType === "SAMPLE_1") {
+      payload.authorStatus = sampleStatus ?? "NOT_REQUIRED";
+    }
     await fetch(`/api/products/${productId}/stages/${stageType}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ satoStatus, satoNote, authorStatus, authorNote, fileUrl: fileUrl || null }),
+      body: JSON.stringify(payload),
     });
     setSaving(false);
     setSaved(true);
@@ -57,6 +74,9 @@ export default function StageSection({ productId, stageType, stage, requiresAuth
   }
 
   const hasData = stage !== null;
+
+  const sampleStatusLabel =
+    sampleStatus === "IN_REVIEW" ? "作家監修中" : sampleStatus === "APPROVED" ? "作家監修完了" : null;
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -67,15 +87,18 @@ export default function StageSection({ productId, stageType, stage, requiresAuth
       >
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-gray-900">{STAGE_TYPE_LABELS[stageType]}</span>
-          {hasData && (
-            <div className="flex gap-1.5">
-              <StatusBadge kind="sato" value={satoStatus} />
-              {requiresAuthorReview && authorStatus !== "NOT_REQUIRED" && (
-                <StatusBadge kind="author" value={authorStatus} />
-              )}
-            </div>
+          {sampleStatusLabel && (
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                sampleStatus === "APPROVED"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-blue-100 text-blue-700"
+              }`}
+            >
+              {sampleStatusLabel}
+            </span>
           )}
-          {!hasData && (
+          {!hasData && !sampleStatusLabel && (
             <span className="text-xs text-gray-400">未開始</span>
           )}
         </div>
@@ -84,29 +107,52 @@ export default function StageSection({ productId, stageType, stage, requiresAuth
 
       {open && (
         <div className="border-t border-gray-100 px-5 py-5 space-y-5 bg-white">
-          {/* PDF */}
-          <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">PDF</p>
-            <ImageUpload value={fileUrl} onChange={setFileUrl} />
-          </div>
+          {/* SAMPLE_1 overall status */}
+          {stageType === "SAMPLE_1" && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-2">全体ステータス</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSampleStatus("IN_REVIEW")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    sampleStatus === "IN_REVIEW"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  作家監修中
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSampleStatus("APPROVED")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    sampleStatus === "APPROVED"
+                      ? "bg-green-600 text-white border-green-600"
+                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  作家監修完了
+                </button>
+                {sampleStatus && (
+                  <button
+                    type="button"
+                    onClick={() => setSampleStatus(null)}
+                    className="text-xs text-gray-400 hover:text-gray-600 ml-1"
+                  >
+                    クリア
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Images */}
+          <ImageUpload values={fileUrls} onChange={setFileUrls} />
 
           {/* Sato review */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">佐藤監修</p>
-            <div className="flex gap-3 items-start flex-wrap">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">ステータス</label>
-                <select
-                  value={satoStatus}
-                  onChange={(e) => setSatoStatus(e.target.value as SatoStatus)}
-                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  {SATO_STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{SATO_STATUS_LABELS[s]}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <p className="text-xs font-semibold text-gray-700">佐藤監修</p>
             <div>
               <label className="block text-xs text-gray-500 mb-1">修正内容・メモ</label>
               <textarea
@@ -119,36 +165,20 @@ export default function StageSection({ productId, stageType, stage, requiresAuth
             </div>
           </div>
 
-          {/* Author review */}
-          {requiresAuthorReview && (
-            <div className="bg-purple-50 rounded-lg p-4 space-y-3">
-              <p className="text-xs font-semibold text-purple-700 uppercase tracking-wider">作家監修</p>
-              <div className="flex gap-3 items-start flex-wrap">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">ステータス</label>
-                  <select
-                    value={authorStatus}
-                    onChange={(e) => setAuthorStatus(e.target.value as AuthorStatus)}
-                    className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
-                  >
-                    {AUTHOR_STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{AUTHOR_STATUS_LABELS[s]}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">作家からの修正依頼</label>
-                <textarea
-                  value={authorNote}
-                  onChange={(e) => setAuthorNote(e.target.value)}
-                  rows={3}
-                  placeholder="作家から来た修正依頼の内容をメモ..."
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-                />
-              </div>
+          {/* Author review — always shown */}
+          <div className="bg-purple-50 rounded-lg p-4 space-y-3">
+            <p className="text-xs font-semibold text-purple-700">作家監修</p>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">作家からの修正依頼</label>
+              <textarea
+                value={authorNote}
+                onChange={(e) => setAuthorNote(e.target.value)}
+                rows={3}
+                placeholder="作家から来た修正依頼の内容をメモ..."
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              />
             </div>
-          )}
+          </div>
 
           <div className="flex items-center gap-3">
             <button
