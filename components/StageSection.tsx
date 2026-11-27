@@ -48,7 +48,7 @@ const SATO_BADGE: Record<string, { label: string; cls: string }> = {
 };
 
 export default function StageSection({ productId, stageType, stage, defaultOpen }: Props) {
-  const [open, setOpen] = useState(defaultOpen ?? false);
+  const [open] = useState(true);
   const [satoStatus, setSatoStatus] = useState<SatoStatus>(
     (stage?.satoStatus as SatoStatus) ?? "PENDING"
   );
@@ -94,31 +94,24 @@ export default function StageSection({ productId, stageType, stage, defaultOpen 
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-gray-50 transition-colors text-left"
-      >
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-gray-900">{STAGE_TYPE_LABELS[stageType]}</span>
-          {hasData && satoBadge && (
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${satoBadge.cls}`}>
-              {satoBadge.label}
-            </span>
-          )}
-          {sampleStatusLabel && (
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                sampleStatus === "APPROVED" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
-              }`}
-            >
-              {sampleStatusLabel}
-            </span>
-          )}
-          {!hasData && <span className="text-xs text-gray-400">未開始</span>}
-        </div>
-        <span className="text-gray-400 text-sm">{open ? "▲" : "▼"}</span>
-      </button>
+      <div className="flex items-center gap-2 flex-wrap px-5 py-4 bg-white border-b border-gray-100">
+        <span className="text-sm font-semibold text-gray-900">{STAGE_TYPE_LABELS[stageType]}</span>
+        {hasData && satoBadge && (
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${satoBadge.cls}`}>
+            {satoBadge.label}
+          </span>
+        )}
+        {sampleStatusLabel && (
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              sampleStatus === "APPROVED" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+            }`}
+          >
+            {sampleStatusLabel}
+          </span>
+        )}
+        {!hasData && <span className="text-xs text-gray-400">未開始</span>}
+      </div>
 
       {open && (
         <div className="border-t border-gray-100 px-5 py-5 space-y-5 bg-white">
