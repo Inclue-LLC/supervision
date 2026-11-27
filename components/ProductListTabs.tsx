@@ -32,7 +32,7 @@ function StageProgress({ stages }: { stages: Stage[] }) {
     <div className="flex gap-1">
       {STAGE_TYPES.map((st) => {
         const stage = stages.find((s) => s.stageType === st);
-        const done = st === "SAMPLE_1" && stage?.authorStatus === "APPROVED";
+        const done = st.startsWith("SAMPLE_") && stage?.authorStatus === "APPROVED";
         return (
           <div
             key={st}

@@ -44,8 +44,9 @@ export default function StageSection({ productId, stageType, stage }: Props) {
   const [satoNote, setSatoNote] = useState(stage?.satoNote ?? "");
   const [authorNote, setAuthorNote] = useState(stage?.authorNote ?? "");
   const [fileUrls, setFileUrls] = useState<string[]>(parseFileUrls(stage?.fileUrl ?? null));
+  const isSample = stageType.startsWith("SAMPLE_");
   const [sampleStatus, setSampleStatus] = useState<SampleStatus>(
-    stageType === "SAMPLE_1"
+    isSample
       ? (stage?.authorStatus === "APPROVED" ? "APPROVED" : stage?.authorStatus === "IN_REVIEW" ? "IN_REVIEW" : null)
       : null
   );
@@ -60,7 +61,7 @@ export default function StageSection({ productId, stageType, stage }: Props) {
       authorNote: authorNote || null,
       fileUrl: serializeFileUrls(fileUrls),
     };
-    if (stageType === "SAMPLE_1") {
+    if (isSample) {
       payload.authorStatus = sampleStatus ?? "NOT_REQUIRED";
     }
     await fetch(`/api/products/${productId}/stages/${stageType}`, {
@@ -107,8 +108,8 @@ export default function StageSection({ productId, stageType, stage }: Props) {
 
       {open && (
         <div className="border-t border-gray-100 px-5 py-5 space-y-5 bg-white">
-          {/* SAMPLE_1 overall status */}
-          {stageType === "SAMPLE_1" && (
+          {/* Sample overall status */}
+          {isSample && (
             <div>
               <p className="text-xs font-medium text-gray-500 mb-2">全体ステータス</p>
               <div className="flex items-center gap-2">

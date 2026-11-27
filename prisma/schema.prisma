@@ -56,8 +56,14 @@ model ReviewStage {
 enum StageType {
   DESIGN_1
   DESIGN_2
+  DESIGN_3
+  DESIGN_4
+  DESIGN_5
   SAMPLE_1
   SAMPLE_2
+  SAMPLE_3
+  SAMPLE_4
+  SAMPLE_5
 }
 
 enum SatoStatus {

@@ -1,15 +1,26 @@
-export type StageType = "DESIGN_1" | "DESIGN_2" | "SAMPLE_1" | "SAMPLE_2";
+export type StageType =
+  | "DESIGN_1" | "DESIGN_2" | "DESIGN_3" | "DESIGN_4" | "DESIGN_5"
+  | "SAMPLE_1" | "SAMPLE_2" | "SAMPLE_3" | "SAMPLE_4" | "SAMPLE_5";
 export type SatoStatus = "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
 export type AuthorStatus = "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
 
 export const STAGE_TYPE_LABELS: Record<StageType, string> = {
   DESIGN_1: "デザイン1",
   DESIGN_2: "デザイン2",
+  DESIGN_3: "デザイン3",
+  DESIGN_4: "デザイン4",
+  DESIGN_5: "デザイン5",
   SAMPLE_1: "サンプル1",
   SAMPLE_2: "サンプル2",
+  SAMPLE_3: "サンプル3",
+  SAMPLE_4: "サンプル4",
+  SAMPLE_5: "サンプル5",
 };
 
-export const STAGE_TYPES: StageType[] = ["DESIGN_1", "DESIGN_2", "SAMPLE_1", "SAMPLE_2"];
+export const STAGE_TYPES: StageType[] = [
+  "DESIGN_1", "DESIGN_2", "DESIGN_3", "DESIGN_4", "DESIGN_5",
+  "SAMPLE_1", "SAMPLE_2", "SAMPLE_3", "SAMPLE_4", "SAMPLE_5",
+];
 
 export const SATO_STATUS_LABELS: Record<SatoStatus, string> = {
   PENDING: "受付待ち",
