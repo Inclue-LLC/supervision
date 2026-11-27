@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import MasterManager from "@/components/MasterManager";
 
+export const dynamic = "force-dynamic";
+
 export default async function MastersPage() {
   const [characters, licensees] = await Promise.all([
     prisma.character.findMany({ orderBy: { createdAt: "asc" } }),

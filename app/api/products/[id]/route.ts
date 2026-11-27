@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,11 +34,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       stages: { orderBy: { stageType: "asc" } },
     },
   });
+  revalidatePath("/");
   return NextResponse.json(product);
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   await prisma.product.delete({ where: { id } });
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -16,5 +17,7 @@ export async function POST(req: NextRequest) {
   const character = await prisma.character.create({
     data: { name: name.trim(), requiresAuthorReview: !!requiresAuthorReview },
   });
+  revalidatePath("/");
+  revalidatePath("/masters");
   return NextResponse.json(character, { status: 201 });
 }

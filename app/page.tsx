@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import ProductListTabs from "@/components/ProductListTabs";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [inProgress, completed, characters, licensees] = await Promise.all([
     prisma.product.findMany({
