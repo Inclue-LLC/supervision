@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className="h-full antialiased" style={{ colorScheme: "light" }}>
-      <body className="min-h-full flex bg-gray-50">
+      <body className="min-h-full flex bg-gray-50" suppressHydrationWarning>
         <Sidebar />
         <main className="flex-1 ml-64 min-h-screen">{children}</main>
       </body>
