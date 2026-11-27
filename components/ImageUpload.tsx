@@ -19,17 +19,22 @@ export default function ImageUpload({ values, onChange }: Props) {
     }
     setUploading(true);
     setError("");
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (res.ok) {
-      const { url } = await res.json();
-      onChange([...values, url]);
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "アップロードに失敗しました");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const { url } = await res.json();
+        onChange([...values, url]);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "アップロードに失敗しました");
+      }
+    } catch {
+      setError("通信エラーが発生しました。再度お試しください");
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   const handleDrop = useCallback(
