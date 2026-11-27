@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ProductForm from "./ProductForm";
 import { StageType, AuthorStatus, STAGE_TYPE_LABELS, STAGE_TYPES } from "@/lib/types";
@@ -103,7 +102,6 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ライセンシー</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新日</th>
-            <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -126,15 +124,6 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
               </td>
               <td className="px-4 py-3 text-xs text-gray-400">
                 {new Date(p.updatedAt).toLocaleDateString("ja-JP")}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <Link
-                  href={`/products/${p.id}`}
-                  className="text-sm text-blue-600 hover:underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  詳細 →
-                </Link>
               </td>
             </tr>
           ))}
