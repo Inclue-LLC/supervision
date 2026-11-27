@@ -4,6 +4,7 @@ import { useState } from "react";
 import ImageUpload from "./ImageUpload";
 import { StageType, STAGE_TYPE_LABELS } from "@/lib/types";
 
+type SatoStatus = "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
 type AuthorStatus = "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
 
 type Stage = {
@@ -20,6 +21,7 @@ type Props = {
   stageType: StageType;
   stage: Stage | null;
   requiresAuthorReview: boolean;
+  defaultOpen?: boolean;
 };
 
 function parseFileUrls(fileUrl: string | null): string[] {
@@ -39,8 +41,17 @@ function serializeFileUrls(urls: string[]): string | null {
 
 type SampleStatus = "IN_REVIEW" | "APPROVED" | null;
 
-export default function StageSection({ productId, stageType, stage }: Props) {
-  const [open, setOpen] = useState(false);
+const SATO_BADGE: Record<string, { label: string; cls: string }> = {
+  REVISION_NEEDED: { label: "差し戻し", cls: "bg-orange-100 text-orange-700" },
+  APPROVED:        { label: "校了",     cls: "bg-green-100 text-green-700" },
+  IN_REVIEW:       { label: "確認中",   cls: "bg-blue-100 text-blue-700" },
+};
+
+export default function StageSection({ productId, stageType, stage, defaultOpen }: Props) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  const [satoStatus, setSatoStatus] = useState<SatoStatus>(
+    (stage?.satoStatus as SatoStatus) ?? "PENDING"
+  );
   const [satoNote, setSatoNote] = useState(stage?.satoNote ?? "");
   const [authorNote, setAuthorNote] = useState(stage?.authorNote ?? "");
   const [fileUrls, setFileUrls] = useState<string[]>(parseFileUrls(stage?.fileUrl ?? null));
@@ -53,10 +64,12 @@ export default function StageSection({ productId, stageType, stage }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  async function handleSave() {
+  async function save(newSatoStatus: SatoStatus) {
     setSaving(true);
     setSaved(false);
+    setSatoStatus(newSatoStatus);
     const payload: Record<string, unknown> = {
+      satoStatus: newSatoStatus,
       satoNote: satoNote || null,
       authorNote: authorNote || null,
       fileUrl: serializeFileUrls(fileUrls),
@@ -75,7 +88,7 @@ export default function StageSection({ productId, stageType, stage }: Props) {
   }
 
   const hasData = stage !== null;
-
+  const satoBadge = SATO_BADGE[satoStatus];
   const sampleStatusLabel =
     sampleStatus === "IN_REVIEW" ? "作家監修中" : sampleStatus === "APPROVED" ? "作家監修完了" : null;
 
@@ -86,22 +99,23 @@ export default function StageSection({ productId, stageType, stage }: Props) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-gray-50 transition-colors text-left"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-gray-900">{STAGE_TYPE_LABELS[stageType]}</span>
+          {hasData && satoBadge && (
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${satoBadge.cls}`}>
+              {satoBadge.label}
+            </span>
+          )}
           {sampleStatusLabel && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                sampleStatus === "APPROVED"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-blue-100 text-blue-700"
+                sampleStatus === "APPROVED" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
               }`}
             >
               {sampleStatusLabel}
             </span>
           )}
-          {!hasData && !sampleStatusLabel && (
-            <span className="text-xs text-gray-400">未開始</span>
-          )}
+          {!hasData && <span className="text-xs text-gray-400">未開始</span>}
         </div>
         <span className="text-gray-400 text-sm">{open ? "▲" : "▼"}</span>
       </button>
@@ -181,14 +195,31 @@ export default function StageSection({ productId, stageType, stage }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Save buttons */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={handleSave}
+              onClick={() => save("IN_REVIEW")}
               disabled={saving}
-              className="bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50"
             >
-              {saving ? "保存中..." : "保存"}
+              保存
+            </button>
+            <button
+              type="button"
+              onClick={() => save("REVISION_NEEDED")}
+              disabled={saving}
+              className="bg-orange-500 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50"
+            >
+              差し戻しで保存
+            </button>
+            <button
+              type="button"
+              onClick={() => save("APPROVED")}
+              disabled={saving}
+              className="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              校了で保存
             </button>
             {saved && <span className="text-sm text-green-600">保存しました</span>}
           </div>

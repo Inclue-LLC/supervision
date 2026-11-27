@@ -34,9 +34,20 @@ export default function ProductStages({ productId, stages, requiresAuthorReview 
   const [visibleTypes, setVisibleTypes] = useState<Set<StageType>>(
     new Set(existingTypes)
   );
+  const [lastAdded, setLastAdded] = useState<StageType | null>(null);
 
   function addType(type: StageType) {
     setVisibleTypes((prev) => new Set([...prev, type]));
+    setLastAdded(type);
+  }
+
+  function removeType(type: StageType) {
+    setVisibleTypes((prev) => {
+      const next = new Set(prev);
+      next.delete(type);
+      return next;
+    });
+    setLastAdded(null);
   }
 
   const stageMap = Object.fromEntries(stages.map((s) => [s.stageType, s]));
@@ -46,14 +57,29 @@ export default function ProductStages({ productId, stages, requiresAuthorReview 
 
   function StageButton({ type }: { type: StageType }) {
     const active = visibleTypes.has(type);
+    const hasDbData = existingTypes.has(type);
+
+    if (active) {
+      return (
+        <div className="inline-flex items-center rounded-lg text-sm font-medium border border-blue-600 bg-blue-600 text-white overflow-hidden">
+          <span className="px-3 py-1.5">{STAGE_TYPE_LABELS[type]}</span>
+          {!hasDbData && (
+            <button
+              onClick={() => removeType(type)}
+              className="px-2 py-1.5 hover:bg-blue-700 transition-colors border-l border-blue-500 leading-none"
+              title="削除"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      );
+    }
+
     return (
       <button
-        onClick={() => !active && addType(type)}
-        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-          active
-            ? "bg-blue-600 text-white border-blue-600"
-            : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-        }`}
+        onClick={() => addType(type)}
+        className="px-3 py-1.5 rounded-lg text-sm font-medium border bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
       >
         {STAGE_TYPE_LABELS[type]}
       </button>
@@ -119,6 +145,7 @@ export default function ProductStages({ productId, stages, requiresAuthorReview 
               stageType={stageType}
               stage={stageMap[stageType] ?? null}
               requiresAuthorReview={requiresAuthorReview}
+              defaultOpen={stageType === lastAdded}
             />
           ))}
         </div>
