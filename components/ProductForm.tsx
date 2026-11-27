@@ -21,45 +21,6 @@ export default function ProductForm({ characters, licensees, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const [newCharName, setNewCharName] = useState("");
-  const [addingChar, setAddingChar] = useState(false);
-  const [newLicenseeName, setNewLicenseeName] = useState("");
-  const [addingLicensee, setAddingLicensee] = useState(false);
-  const [charList, setCharList] = useState(characters);
-  const [licenseeList, setLicenseeList] = useState(licensees);
-
-  async function createChar() {
-    if (!newCharName.trim()) return;
-    const res = await fetch("/api/characters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newCharName.trim(), requiresAuthorReview: false }),
-    });
-    if (res.ok) {
-      const c = await res.json();
-      setCharList((prev) => [...prev, c]);
-      setCharacterId(c.id);
-      setNewCharName("");
-      setAddingChar(false);
-    }
-  }
-
-  async function createLicensee() {
-    if (!newLicenseeName.trim()) return;
-    const res = await fetch("/api/licensees", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newLicenseeName.trim() }),
-    });
-    if (res.ok) {
-      const l = await res.json();
-      setLicenseeList((prev) => [...prev, l]);
-      setLicenseeId(l.id);
-      setNewLicenseeName("");
-      setAddingLicensee(false);
-    }
-  }
-
   function addName() {
     setNames((prev) => [...prev, ""]);
   }
@@ -121,33 +82,18 @@ export default function ProductForm({ characters, licensees, onClose }: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               キャラクター <span className="text-red-500">*</span>
             </label>
-            {!addingChar ? (
-              <div className="flex gap-2">
-                <select
-                  value={characterId}
-                  onChange={(e) => setCharacterId(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {charList.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <button type="button" onClick={() => setAddingChar(true)} className="text-sm text-blue-600 hover:underline whitespace-nowrap">
-                  + 新規
-                </button>
-              </div>
+            {characters.length === 0 ? (
+              <p className="text-sm text-gray-400">マスタ管理からキャラクターを登録してください</p>
             ) : (
-              <div className="flex gap-2">
-                <input
-                  autoFocus
-                  value={newCharName}
-                  onChange={(e) => setNewCharName(e.target.value)}
-                  placeholder="キャラクター名"
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button type="button" onClick={createChar} className="bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700">追加</button>
-                <button type="button" onClick={() => setAddingChar(false)} className="text-sm text-gray-400 hover:text-gray-600">✕</button>
-              </div>
+              <select
+                value={characterId}
+                onChange={(e) => setCharacterId(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {characters.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             )}
           </div>
 
@@ -157,35 +103,16 @@ export default function ProductForm({ characters, licensees, onClose }: Props) {
               ライセンシー
               <span className="ml-1 text-xs text-gray-400">（なければ自社製造）</span>
             </label>
-            {!addingLicensee ? (
-              <div className="flex gap-2">
-                <select
-                  value={licenseeId}
-                  onChange={(e) => setLicenseeId(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">自社製造</option>
-                  {licenseeList.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
-                <button type="button" onClick={() => setAddingLicensee(true)} className="text-sm text-blue-600 hover:underline whitespace-nowrap">
-                  + 新規
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <input
-                  autoFocus
-                  value={newLicenseeName}
-                  onChange={(e) => setNewLicenseeName(e.target.value)}
-                  placeholder="ライセンシー名"
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button type="button" onClick={createLicensee} className="bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700">追加</button>
-                <button type="button" onClick={() => setAddingLicensee(false)} className="text-sm text-gray-400 hover:text-gray-600">✕</button>
-              </div>
-            )}
+            <select
+              value={licenseeId}
+              onChange={(e) => setLicenseeId(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">自社製造</option>
+              {licensees.map((l) => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Theme */}
@@ -242,7 +169,7 @@ export default function ProductForm({ characters, licensees, onClose }: Props) {
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || characters.length === 0}
               className="flex-1 bg-blue-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {saving ? "追加中..." : validCount > 1 ? `${validCount}件を追加` : "商品を追加"}
