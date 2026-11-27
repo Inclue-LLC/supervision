@@ -19,11 +19,18 @@ export async function POST(req: NextRequest) {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
       const { put } = await import("@vercel/blob");
-      const blob = await put(filename, file, { access: "public" });
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const blob = await put(filename, buffer, {
+        access: "public",
+        contentType: file.type,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
       return NextResponse.json({ url: blob.url }, { status: 201 });
     } catch (e) {
-      console.error("Blob upload error:", e);
-      return NextResponse.json({ error: "アップロードに失敗しました" }, { status: 500 });
+      const msg = e instanceof Error ? `${e.constructor.name}: ${e.message}` : String(e);
+      console.error("Blob upload error:", msg);
+      return NextResponse.json({ error: `アップロードに失敗しました (${msg})` }, { status: 500 });
     }
   }
 
