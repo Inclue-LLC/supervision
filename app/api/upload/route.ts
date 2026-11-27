@@ -10,13 +10,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "ファイルは必須です" }, { status: 400 });
   }
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return NextResponse.json({ error: "画像ファイル（JPG/PNG/GIF/WebP）のみ対応しています" }, { status: 400 });
+  if (file.type !== "application/pdf") {
+    return NextResponse.json({ error: "PDFファイルのみ対応しています" }, { status: 400 });
   }
 
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
 
   await mkdir(uploadsDir, { recursive: true });

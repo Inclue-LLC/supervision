@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "監修進行中の案件", icon: "📋" },
   { href: "/characters", label: "案件別", icon: "🗂️" },
-  { href: "/supervisors", label: "監修者管理", icon: "👤" },
 ];
 
 export default function Sidebar() {
