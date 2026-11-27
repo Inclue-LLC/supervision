@@ -12,8 +12,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { name } = await req.json();
+  const { name, requiresAuthorReview } = await req.json();
   if (!name?.trim()) return NextResponse.json({ error: "名前は必須です" }, { status: 400 });
-  const character = await prisma.character.create({ data: { name: name.trim() } });
+  const character = await prisma.character.create({
+    data: { name: name.trim(), requiresAuthorReview: requiresAuthorReview ?? false },
+  });
   return NextResponse.json(character, { status: 201 });
 }

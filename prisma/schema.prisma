@@ -18,12 +18,13 @@ model Supervisor {
 }
 
 model Character {
-  id              String    @id @default(cuid())
-  name            String
-  inhouseProducts Product[] @relation("InhouseProducts")
-  regions         Region[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  name                 String
+  requiresAuthorReview Boolean   @default(false)
+  inhouseProducts      Product[] @relation("InhouseProducts")
+  regions              Region[]
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
 
 model Region {
@@ -47,18 +48,21 @@ model Licensee {
 }
 
 model Product {
-  id          String       @id @default(cuid())
-  name        String
-  type        ReviewType
-  status      ReviewStatus @default(PENDING)
-  imageUrl    String?
-  characterId String?
-  character   Character?   @relation("InhouseProducts", fields: [characterId], references: [id], onDelete: Cascade)
-  licenseeId  String?
-  licensee    Licensee?    @relation(fields: [licenseeId], references: [id], onDelete: Cascade)
-  comments    Comment[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String             @id @default(cuid())
+  name         String
+  type         ReviewType
+  status       ReviewStatus       @default(PENDING)
+  satoNote     String?
+  authorStatus AuthorReviewStatus @default(NOT_REQUIRED)
+  authorNote   String?
+  imageUrl     String?
+  characterId  String?
+  character    Character?         @relation("InhouseProducts", fields: [characterId], references: [id], onDelete: Cascade)
+  licenseeId   String?
+  licensee     Licensee?          @relation(fields: [licenseeId], references: [id], onDelete: Cascade)
+  comments     Comment[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 model Comment {
@@ -83,4 +87,12 @@ enum ReviewStatus {
   REVISION_NEEDED
   APPROVED
   COMPLETED
+}
+
+enum AuthorReviewStatus {
+  NOT_REQUIRED
+  PENDING
+  IN_REVIEW
+  REVISION_NEEDED
+  APPROVED
 }

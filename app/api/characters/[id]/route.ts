@@ -6,7 +6,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const character = await prisma.character.findUnique({
     where: { id },
     include: {
-      inhouseProducts: { include: { comments: true }, orderBy: { createdAt: "asc" } },
+      inhouseProducts: { orderBy: { createdAt: "asc" } },
       regions: {
         include: {
           licensees: {
@@ -25,9 +25,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { name } = await req.json();
+  const { name, requiresAuthorReview } = await req.json();
   if (!name?.trim()) return NextResponse.json({ error: "名前は必須です" }, { status: 400 });
-  const character = await prisma.character.update({ where: { id }, data: { name: name.trim() } });
+  const character = await prisma.character.update({
+    where: { id },
+    data: {
+      name: name.trim(),
+      ...(requiresAuthorReview !== undefined && { requiresAuthorReview }),
+    },
+  });
   return NextResponse.json(character);
 }
 

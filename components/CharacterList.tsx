@@ -7,6 +7,7 @@ import Link from "next/link";
 type Character = {
   id: string;
   name: string;
+  requiresAuthorReview: boolean;
   _count: { inhouseProducts: number; regions: number };
 };
 
@@ -14,9 +15,11 @@ export default function CharacterList({ characters }: { characters: Character[] 
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
+  const [requiresAuthorReview, setRequiresAuthorReview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editRequiresAuthorReview, setEditRequiresAuthorReview] = useState(false);
 
   async function addCharacter(e: React.FormEvent) {
     e.preventDefault();
@@ -25,9 +28,10 @@ export default function CharacterList({ characters }: { characters: Character[] 
     await fetch("/api/characters", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, requiresAuthorReview }),
     });
     setName("");
+    setRequiresAuthorReview(false);
     setShowForm(false);
     setLoading(false);
     router.refresh();
@@ -39,15 +43,15 @@ export default function CharacterList({ characters }: { characters: Character[] 
     await fetch(`/api/characters/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName }),
+      body: JSON.stringify({ name: editName, requiresAuthorReview: editRequiresAuthorReview }),
     });
     setEditId(null);
     setLoading(false);
     router.refresh();
   }
 
-  async function deleteCharacter(id: string, charName: string) {
-    if (!confirm(`「${charName}」を削除しますか？`)) return;
+  async function deleteCharacter(id: string, name: string) {
+    if (!confirm(`「${name}」を削除しますか？`)) return;
     await fetch(`/api/characters/${id}`, { method: "DELETE" });
     router.refresh();
   }
@@ -64,23 +68,34 @@ export default function CharacterList({ characters }: { characters: Character[] 
       </div>
 
       {showForm && (
-        <form onSubmit={addCharacter} className="bg-white rounded-xl border border-gray-200 p-5 mb-6 flex gap-3">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="キャラクター名"
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            autoFocus
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            追加
-          </button>
+        <form onSubmit={addCharacter} className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+          <div className="flex gap-3 mb-3">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="キャラクター名"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              追加
+            </button>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={requiresAuthorReview}
+              onChange={(e) => setRequiresAuthorReview(e.target.checked)}
+              className="rounded"
+            />
+            作家監修あり（作家さんのIPの場合）
+          </label>
         </form>
       )}
 
@@ -93,30 +108,46 @@ export default function CharacterList({ characters }: { characters: Character[] 
           {characters.map((c) => (
             <div key={c.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
               {editId === c.id ? (
-                <div className="flex gap-2 mb-3">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => updateCharacter(c.id)}
-                    disabled={loading}
-                    className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    保存
-                  </button>
-                  <button
-                    onClick={() => setEditId(null)}
-                    className="border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50"
-                  >
-                    ×
-                  </button>
+                <div className="mb-3">
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => updateCharacter(c.id)}
+                      disabled={loading}
+                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      保存
+                    </button>
+                    <button
+                      onClick={() => setEditId(null)}
+                      className="border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editRequiresAuthorReview}
+                      onChange={(e) => setEditRequiresAuthorReview(e.target.checked)}
+                      className="rounded"
+                    />
+                    作家監修あり
+                  </label>
                 </div>
               ) : (
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{c.name}</h3>
+                <div className="mb-2">
+                  <h3 className="text-base font-semibold text-gray-900">{c.name}</h3>
+                  {c.requiresAuthorReview && (
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">作家監修あり</span>
+                  )}
+                </div>
               )}
               <div className="flex gap-3 text-xs text-gray-500 mb-4">
                 <span>自社製造: {c._count.inhouseProducts}商品</span>
@@ -131,7 +162,7 @@ export default function CharacterList({ characters }: { characters: Character[] 
                 </Link>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => { setEditId(c.id); setEditName(c.name); }}
+                    onClick={() => { setEditId(c.id); setEditName(c.name); setEditRequiresAuthorReview(c.requiresAuthorReview); }}
                     className="text-xs text-gray-500 hover:text-gray-700"
                   >
                     編集

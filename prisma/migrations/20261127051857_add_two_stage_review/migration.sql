@@ -10,6 +10,7 @@ CREATE TABLE "Supervisor" (
 CREATE TABLE "Character" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
+    "requiresAuthorReview" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -40,6 +41,9 @@ CREATE TABLE "Product" (
     "name" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "satoNote" TEXT,
+    "authorStatus" TEXT NOT NULL DEFAULT 'NOT_REQUIRED',
+    "authorNote" TEXT,
     "imageUrl" TEXT,
     "characterId" TEXT,
     "licenseeId" TEXT,

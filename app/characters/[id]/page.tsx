@@ -32,6 +32,8 @@ export default async function CharacterDetailPage({
 
   const serializedProducts = character.inhouseProducts.map((p) => ({
     ...p,
+    satoNote: p.satoNote,
+    authorNote: p.authorNote,
     imageUrl: p.imageUrl,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
@@ -51,12 +53,17 @@ export default async function CharacterDetailPage({
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <nav className="text-xs text-gray-500 mb-6 flex items-center gap-1">
-        <Link href="/characters" className="hover:text-gray-700">キャラクター</Link>
+        <Link href="/characters" className="hover:text-gray-700">案件別</Link>
         <span>/</span>
         <span className="text-gray-900">{character.name}</span>
       </nav>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">{character.name}</h1>
+      <div className="flex items-center gap-3 mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">{character.name}</h1>
+        {character.requiresAuthorReview && (
+          <span className="text-xs bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full font-medium">作家監修あり</span>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -66,6 +73,7 @@ export default async function CharacterDetailPage({
           <ProductSection
             products={serializedProducts}
             addUrl={`/api/characters/${id}/products`}
+            requiresAuthorReview={character.requiresAuthorReview}
           />
         </div>
 
