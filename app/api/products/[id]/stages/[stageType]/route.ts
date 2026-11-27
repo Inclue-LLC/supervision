@@ -28,7 +28,12 @@ export async function PATCH(
     },
   });
 
-  await prisma.product.update({ where: { id: productId }, data: {} });
+  const isSampleApproved =
+    stageType.startsWith("SAMPLE_") && data.satoStatus === "APPROVED";
+  await prisma.product.update({
+    where: { id: productId },
+    data: isSampleApproved ? { isCompleted: true } : {},
+  });
 
   return NextResponse.json(stage);
 }

@@ -11,7 +11,7 @@ export default async function HomePage() {
       include: {
         character: { select: { id: true, name: true, requiresAuthorReview: true } },
         licensee: { select: { id: true, name: true } },
-        stages: { select: { stageType: true, satoStatus: true, authorStatus: true } },
+        stages: { select: { stageType: true, satoStatus: true, authorStatus: true, fileUrl: true } },
       },
     }),
     prisma.product.findMany({
@@ -20,7 +20,7 @@ export default async function HomePage() {
       include: {
         character: { select: { id: true, name: true, requiresAuthorReview: true } },
         licensee: { select: { id: true, name: true } },
-        stages: { select: { stageType: true, satoStatus: true, authorStatus: true } },
+        stages: { select: { stageType: true, satoStatus: true, authorStatus: true, fileUrl: true } },
       },
     }),
     prisma.character.findMany({ orderBy: { createdAt: "asc" } }),

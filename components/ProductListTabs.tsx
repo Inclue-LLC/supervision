@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ProductForm from "./ProductForm";
 import { StageType, AuthorStatus, STAGE_TYPE_LABELS, STAGE_TYPES } from "@/lib/types";
+// STAGE_TYPES used for ordering in getLatestStage
 
-type Stage = { stageType: StageType; authorStatus: AuthorStatus };
+type Stage = { stageType: StageType; satoStatus: string; authorStatus: AuthorStatus; fileUrl: string | null };
 type Character = { id: string; name: string; requiresAuthorReview: boolean };
 type Licensee = { id: string; name: string };
 type Product = {
@@ -27,23 +28,60 @@ type Props = {
   licensees: Licensee[];
 };
 
-function StageProgress({ stages }: { stages: Stage[] }) {
+const SATO_STATUS_LABELS: Record<string, string> = {
+  PENDING: "未開始",
+  IN_REVIEW: "作家に監修依頼済み",
+  REVISION_NEEDED: "差し戻し",
+  APPROVED: "校了",
+};
+
+const SATO_STATUS_COLORS: Record<string, string> = {
+  PENDING: "text-gray-400",
+  IN_REVIEW: "text-sky-600",
+  REVISION_NEEDED: "text-amber-600",
+  APPROVED: "text-emerald-600",
+};
+
+function parseFirstImageUrl(fileUrl: string | null): string | null {
+  if (!fileUrl) return null;
+  try {
+    const parsed = JSON.parse(fileUrl);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+  } catch {}
+  return fileUrl;
+}
+
+function getLatestStage(stages: Stage[]): Stage | null {
+  for (let i = STAGE_TYPES.length - 1; i >= 0; i--) {
+    const st = STAGE_TYPES[i];
+    const stage = stages.find((s) => s.stageType === st);
+    if (stage) return stage;
+  }
+  return null;
+}
+
+function CurrentStatus({ stages }: { stages: Stage[] }) {
+  const latest = getLatestStage(stages);
+  if (!latest) return <span className="text-xs text-gray-300">未開始</span>;
+  const statusLabel = SATO_STATUS_LABELS[latest.satoStatus] ?? latest.satoStatus;
+  const color = SATO_STATUS_COLORS[latest.satoStatus] ?? "text-gray-500";
   return (
-    <div className="flex gap-1">
-      {STAGE_TYPES.map((st) => {
-        const stage = stages.find((s) => s.stageType === st);
-        const done = st.startsWith("SAMPLE_") && stage?.authorStatus === "APPROVED";
-        return (
-          <div
-            key={st}
-            title={STAGE_TYPE_LABELS[st]}
-            className={`w-2 h-2 rounded-full ${
-              done ? "bg-green-500" : stage ? "bg-blue-400" : "bg-gray-200"
-            }`}
-          />
-        );
-      })}
-    </div>
+    <span className={`text-xs font-medium ${color}`}>
+      {STAGE_TYPE_LABELS[latest.stageType]} - {statusLabel}
+    </span>
+  );
+}
+
+function LatestImage({ stages }: { stages: Stage[] }) {
+  const latest = getLatestStage(stages);
+  const url = parseFirstImageUrl(latest?.fileUrl ?? null);
+  if (!url) return <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300 text-xs shrink-0">—</div>;
+  return (
+    <img
+      src={url}
+      alt="最新画像"
+      className="w-10 h-10 object-contain rounded-lg border border-gray-200 bg-gray-50 shrink-0"
+    />
   );
 }
 
@@ -58,34 +96,38 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
       <table className="w-full">
         <thead className="bg-gray-50 border-y border-gray-200">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">キャラクター</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">テーマ</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ライセンシー</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">段階</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新日</th>
-            <th className="px-6 py-3" />
+            <th className="px-4 py-3 w-14" />
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">キャラクター</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">テーマ</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ライセンシー</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新日</th>
+            <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {products.map((p) => (
             <tr key={p.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/products/${p.id}`}>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.name}</td>
-              <td className="px-6 py-4 text-sm text-gray-600">
+              <td className="px-4 py-3">
+                <LatestImage stages={p.stages} />
+              </td>
+              <td className="px-4 py-3 text-sm font-medium text-gray-900">{p.name}</td>
+              <td className="px-4 py-3 text-sm text-gray-600">
                 {p.character.name}
                 {p.character.requiresAuthorReview && (
                   <span className="ml-1 text-xs text-purple-600 bg-purple-50 px-1 py-0.5 rounded">作家監修</span>
                 )}
               </td>
-              <td className="px-6 py-4 text-sm text-gray-500">{p.theme ?? <span className="text-gray-300">—</span>}</td>
-              <td className="px-6 py-4 text-sm text-gray-500">{p.licensee?.name ?? "自社製造"}</td>
-              <td className="px-6 py-4">
-                <StageProgress stages={p.stages} />
+              <td className="px-4 py-3 text-sm text-gray-500">{p.theme ?? <span className="text-gray-300">—</span>}</td>
+              <td className="px-4 py-3 text-sm text-gray-500">{p.licensee?.name ?? "自社製造"}</td>
+              <td className="px-4 py-3">
+                <CurrentStatus stages={p.stages} />
               </td>
-              <td className="px-6 py-4 text-xs text-gray-400">
+              <td className="px-4 py-3 text-xs text-gray-400">
                 {new Date(p.updatedAt).toLocaleDateString("ja-JP")}
               </td>
-              <td className="px-6 py-4 text-right">
+              <td className="px-4 py-3 text-right">
                 <Link
                   href={`/products/${p.id}`}
                   className="text-sm text-blue-600 hover:underline"
