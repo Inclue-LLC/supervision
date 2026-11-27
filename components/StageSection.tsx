@@ -15,6 +15,7 @@ type Stage = {
   authorStatus: AuthorStatus;
   authorNote: string | null;
   fileUrl: string | null;
+  updatedAt: string | null;
 };
 
 type Props = {
@@ -56,6 +57,7 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
   const [satoNote, setSatoNote] = useState(stage?.satoNote ?? "");
   const [authorNote, setAuthorNote] = useState(stage?.authorNote ?? "");
   const [fileUrls, setFileUrls] = useState<string[]>(parseFileUrls(stage?.fileUrl ?? null));
+  const [stageUpdatedAt, setStageUpdatedAt] = useState<string | null>(stage?.updatedAt ?? null);
   const isSample = stageType.startsWith("SAMPLE_");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -78,6 +80,7 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
     });
     setSaving(false);
     setSaved(true);
+    setStageUpdatedAt(new Date().toISOString());
     if (isSample && newSatoStatus === "APPROVED") {
       router.push("/");
     } else {
@@ -105,6 +108,11 @@ export default function StageSection({ productId, stageType, stage, onDelete }: 
           </span>
         )}
         {!hasData && <span className="text-xs text-gray-400">未開始</span>}
+        {stageUpdatedAt && (
+          <span className="text-xs text-gray-400 ml-auto">
+            {new Date(stageUpdatedAt).toLocaleDateString("ja-JP", { year: "numeric", month: "numeric", day: "numeric" })}
+          </span>
+        )}
       </div>
 
       {open && (

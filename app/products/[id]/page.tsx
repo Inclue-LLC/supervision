@@ -65,6 +65,7 @@ export default async function ProductDetailPage({
           authorStatus: s.authorStatus as "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED",
           authorNote: s.authorNote,
           fileUrl: s.fileUrl,
+          updatedAt: s.updatedAt.toISOString(),
         }))}
         requiresAuthorReview={product.character.requiresAuthorReview}
       />

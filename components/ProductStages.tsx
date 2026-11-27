@@ -20,6 +20,7 @@ type Stage = {
   authorStatus: "NOT_REQUIRED" | "PENDING" | "IN_REVIEW" | "REVISION_NEEDED" | "APPROVED";
   authorNote: string | null;
   fileUrl: string | null;
+  updatedAt: string | null;
 };
 
 type Props = {
