@@ -26,6 +26,7 @@ model Licensee {
 model Product {
   id          String        @id @default(cuid())
   name        String
+  theme       String?
   characterId String
   character   Character     @relation(fields: [characterId], references: [id])
   licenseeId  String?

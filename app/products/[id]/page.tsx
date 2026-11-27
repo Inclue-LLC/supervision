@@ -35,7 +35,7 @@ export default async function ProductDetailPage({
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 mb-1">{product.name}</h1>
-            <div className="flex gap-4 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1">
               <span>
                 <span className="text-gray-400">キャラクター：</span>
                 <span className="font-medium text-gray-700">{product.character.name}</span>
@@ -47,6 +47,12 @@ export default async function ProductDetailPage({
                 <span className="text-gray-400">ライセンシー：</span>
                 <span className="font-medium text-gray-700">{product.licensee?.name ?? "自社製造"}</span>
               </span>
+              {product.theme && (
+                <span>
+                  <span className="text-gray-400">テーマ：</span>
+                  <span className="font-medium text-gray-700">{product.theme}</span>
+                </span>
+              )}
             </div>
           </div>
           <ProductDetailActions productId={id} isCompleted={product.isCompleted} />

@@ -13,6 +13,7 @@ type Licensee = { id: string; name: string };
 type Product = {
   id: string;
   name: string;
+  theme: string | null;
   character: Character;
   licensee: Licensee | null;
   isCompleted: boolean;
@@ -61,6 +62,7 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">キャラクター</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">テーマ</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ライセンシー</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">段階</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新日</th>
@@ -77,6 +79,7 @@ function ProductTable({ products, emptyText }: { products: Product[]; emptyText:
                   <span className="ml-1 text-xs text-purple-600 bg-purple-50 px-1 py-0.5 rounded">作家監修</span>
                 )}
               </td>
+              <td className="px-6 py-4 text-sm text-gray-500">{p.theme ?? <span className="text-gray-300">—</span>}</td>
               <td className="px-6 py-4 text-sm text-gray-500">{p.licensee?.name ?? "自社製造"}</td>
               <td className="px-6 py-4">
                 <StageProgress stages={p.stages} requiresAuthorReview={p.character.requiresAuthorReview} />

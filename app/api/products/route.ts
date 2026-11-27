@@ -18,13 +18,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, characterId, licenseeId } = await req.json();
+  const { name, theme, characterId, licenseeId } = await req.json();
   if (!name?.trim() || !characterId) {
     return NextResponse.json({ error: "商品名とキャラクターは必須です" }, { status: 400 });
   }
   const product = await prisma.product.create({
     data: {
       name: name.trim(),
+      theme: theme?.trim() || null,
       characterId,
       licenseeId: licenseeId || null,
     },

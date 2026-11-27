@@ -22,6 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name.trim() }),
+      ...(data.theme !== undefined && { theme: data.theme?.trim() || null }),
       ...(data.isCompleted !== undefined && { isCompleted: data.isCompleted }),
       ...(data.characterId !== undefined && { characterId: data.characterId }),
       ...(data.licenseeId !== undefined && { licenseeId: data.licenseeId || null }),
